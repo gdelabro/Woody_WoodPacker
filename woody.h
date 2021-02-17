@@ -24,13 +24,15 @@
 
 typedef struct
 {
-	uint32_t	section_size;
+	uint64_t	new_entry;
+	uint32_t	new_code_offset;
+	uint32_t	bss_size;
 	Elf64_Addr	old_entry;
-	uint64_t	text_offset;
-	uint64_t	text_addr;
-	uint64_t	text_size;
-	uint8_t		align;
-	Elf64_Shdr	new_section;
+	Elf64_Addr	old_entry_offset;
+	Elf64_Shdr	*text;
+	Elf64_Shdr	*data;
+	Elf64_Phdr	*seg;
+	uint32_t	bits_added;
 }				elf_info;
 
 

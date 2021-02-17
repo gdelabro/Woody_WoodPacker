@@ -25,5 +25,6 @@ void	modify_payload(void *pl, int sz, void *jmp_addr)
 	void	*addr_to_modify;
 
 	addr_to_modify = ft_strnnstr(pl, "\x11\x11\x11\x11\x11\x11\x11\x11", sz, 8);
-	ft_memcpy(addr_to_modify, jmp_addr, 8);
+	if (addr_to_modify)
+		ft_memcpy(addr_to_modify, &jmp_addr, 8);
 }

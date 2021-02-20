@@ -16,7 +16,26 @@ void	ft_quit(char *str)
 {
 	if (str)
 		ft_printf("%s\n", str);
-	exit(0);
+	exit(-1);
+}
+
+void	read_binary_file(int fd, char *buf, uint32_t size)
+{
+	uint32_t	size_read;
+	int			ret;
+	char		*ptr;
+
+	size_read = 0;
+	ret = 0;
+	ptr = buf;
+	while ((ret = read(fd, ptr, 4096)) == 4096)
+	{
+		ptr += ret;
+		size_read += ret;
+	}
+	size_read += ret;
+	if (ret <= -1 || size_read != size)
+		ft_quit("can't read file properly");
 }
 
 void	process_file(char *name)
@@ -24,6 +43,7 @@ void	process_file(char *name)
 	int				fd;
 	char			*ptr;
 	struct stat		buf;
+	int				ret;
 
 	if ((fd = open(name, O_RDONLY)) < 0)
 		return (ft_quit("can't open the file"));
@@ -33,6 +53,9 @@ void	process_file(char *name)
 		return (ft_quit("your file isn't a regular file"));
 	if (buf.st_size <= 0 && close(fd) != -11)
 		return (ft_quit(name));
+	/*if (!(ptr = malloc(buf.st_size)))
+		ft_quit("can't process to malloc");
+	read_binary_file(fd, ptr, buf.st_size);*/
 	if ((ptr = mmap(NULL, buf.st_size,
 					PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == MAP_FAILED)
 		ft_quit("can't process to mmap");
@@ -40,6 +63,7 @@ void	process_file(char *name)
 	rebuild_binary(ptr);
 	if ((munmap(ptr, buf.st_size)))
 		ft_quit("can't process to munmap");
+	//free(ptr);
 	if (close(fd) < 0)
 		ft_quit("can't close properly");
 }

@@ -6,7 +6,7 @@
 #    By: gdelabro <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2020/10/23 19:47:08 by gdelabro          #+#    #+#              #
-#    Updated: 2021/01/27 16:31:15 by gdelabro         ###   ########.fr        #
+#    Updated: 2021/02/17 18:21:20 by gdelabro         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,7 +34,7 @@ $(LIB):
 $(NAME): $(OBJ)
 	@printf "\n"
 	@$(CC) $^ $(LIB) -o $@
-	@echo "Compilation of \033[33;1m$(NAME)\033[0;1m: [\033[1;32mOK\033[0;1m]\033[0m]"
+	@echo "Compilation of \033[33;1m$(NAME)\033[0;1m: [\033[1;5;32mOK\033[0;1m]\033[0m"
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
 	@printf "\033[34;1m| \033[0;1m"

@@ -42,19 +42,14 @@ void	modify_sections(void *ptr, Elf64_Shdr *shdr_base, int shnum, uint32_t index
 		check_address((void*)shdr + sizeof(*shdr));
 		name = sct_names + shdr->sh_name;
 		check_address(name);
-	ft_printf("{red}\n");
-		show_section(shdr, sct_names, i);
+		//show_section(shdr, sct_names, i);
 		if (shdr->sh_offset >= info->seg->p_offset + info->seg->p_filesz && ft_strcmp(".bss", name))
 		{
 			shdr->sh_addr ? shdr->sh_addr += info->bits_added : 0;
 			shdr->sh_offset += info->bits_added;
 		}
 		if (!ft_strcmp(".bss", name))
-		{
-			//shdr->sh_flags = SHF_EXECINSTR & SHF_ALLOC & SHF_WRITE;
-			//shdr->sh_type = SHT_PROGBITS;
-			//shdr->sh_size += payload_mem_size + align(shdr->sh_size, 16);
-		}
+			shdr->sh_type = 1;
 	}
 }
 
@@ -69,14 +64,13 @@ void	modify_program_header(void *ptr, elf_info *info)
 	phdr = ptr + ehdr->e_phoff;
 	check_address(phdr + 1);
 	check_address(phdr + ehdr->e_phnum);
-	ft_printf("PROGRAM HEADERS:\n");
 	i = -1;
 	filled = 0;
 	info->seg = NULL;
 	while (++i < ehdr->e_phnum)
 	{
-		ft_printf("header %d:\n\ttype: %x\n\tflags: %x\n\toffset: %x\n\tvaddr: %x\n\tpaddr: %x\n\tfilesz: %x\n\tmemsz: %x\n\talign: %x\n",
-		i, phdr->p_type, phdr->p_flags, phdr->p_offset, phdr->p_vaddr, phdr->p_paddr, phdr->p_filesz, phdr->p_memsz, phdr->p_align);
+		//ft_printf("HEADER %d:\n\ttype: %x\n\tflags: %x\n\toffset: %x\n\tvaddr: %x\n\tpaddr: %x\n\tfilesz: %x\n\tmemsz: %x\n\talign: %x\n",
+		//i, phdr->p_type, phdr->p_flags, phdr->p_offset, phdr->p_vaddr, phdr->p_paddr, phdr->p_filesz, phdr->p_memsz, phdr->p_align);
 		if (phdr->p_type == 1)
 			filled++;
 		if (phdr->p_type == 1 && filled == 1)
@@ -91,9 +85,9 @@ void	modify_program_header(void *ptr, elf_info *info)
 		}
 		else if (info->seg && phdr->p_offset > info->seg->p_offset + info->seg->p_filesz)
 		{
-			phdr->p_offset += info->bits_added;// + payload_mem_size
-			phdr->p_paddr ? phdr->p_paddr += info->bits_added : 0;// + payload_mem_size
-			phdr->p_vaddr ? phdr->p_vaddr += info->bits_added : 0;// + payload_mem_size
+			phdr->p_offset += info->bits_added;
+			phdr->p_paddr ? phdr->p_paddr += info->bits_added : 0;
+			phdr->p_vaddr ? phdr->p_vaddr += info->bits_added : 0;
 		}
 		phdr += 1;
 	}
@@ -103,29 +97,41 @@ void	modify_program_header(void *ptr, elf_info *info)
 
 void	write_binary(void *ptr, Elf64_Ehdr 	*ehdr, elf_info	*info)
 {
-	int		fd;
-	char	alignement[16] = "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90";
-	int		size_begining;
-	void	*end_file;
-	int		i;
+	int			fd;
+	char		alignement[16] = "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90";
+	uint64_t	size_begining;
+	void		*end_file;
+	int			i;
+	int			wrote;
+	void		*new_binary;
 
-	fd = open("woody", O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-	if (fd < 0)
-		ft_quit("can't open new file woody");
+	new_binary = malloc(get_ptr_end() - get_ptr_start() + info->bits_added);
 	ehdr->e_shoff += info->bits_added;
 	ehdr->e_entry = info->new_entry;
 	info->seg->p_filesz += info->bits_added;
 	info->seg->p_memsz = info->seg->p_filesz;
 	size_begining = info->new_code_offset;
-	write(fd, ptr, size_begining);
-	i = -1;
-	while (++i < info->bss_size)
-		write(fd, "\0", 1);
-	write(fd, payload2, payload_size);
-	write(fd, alignement, align(payload_size, 16));
+	wrote = 0;
+	ft_memcpy(new_binary, ptr, size_begining);
+	wrote += size_begining;
+	ft_memset(new_binary + wrote, 0, info->bss_size);
+	wrote += info->bss_size;
+	ft_memcpy(new_binary + wrote, payload2, payload_size);
+	wrote += payload_size;
+	ft_memset(new_binary + wrote, 0x90, align(payload_size, 16));
+	wrote += align(payload_size, 16);
 	end_file = ptr + size_begining;
-	write(fd, end_file, (size_t)(get_ptr_end() - end_file));
-	close(fd);
+	ft_memcpy(new_binary + wrote, end_file, (size_t)(get_ptr_end() - end_file));
+	wrote += (size_t)(get_ptr_end() - end_file);
+
+	if (wrote != get_ptr_end() - get_ptr_start() + info->bits_added)
+		ft_printf("wooot\n");
+	fd = open("woody", O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+	if (fd < 0)
+		ft_quit("can't open new file woody");
+	write(fd, new_binary, wrote);
+	if (close(fd) != 0)
+		ft_quit("can't close woody properly");
 }
 
 void	rebuild_binary(void *ptr)
@@ -158,6 +164,5 @@ void	rebuild_binary(void *ptr)
 	modify_payload(payload2, payload_size, (void*)info.old_entry_offset);
 
 	write_binary(ptr, ehdr, &info);
-	ft_printf("entry: %x\n", ehdr->e_entry);
 	free(payload2);
 }

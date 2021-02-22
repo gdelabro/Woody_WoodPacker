@@ -13,7 +13,7 @@
 NAME = woody_woodpacker
 
 SRC_PATH = src
-SRC_NAME = main.c check_address.c pars_file.c modify_payload.c
+SRC_NAME = main.c check_address.c pars_file.c modify_payload.c encrypt.c
 
 OBJ_PATH = obj
 OBJ_NAME = $(SRC_NAME:.c=.o)
@@ -50,6 +50,7 @@ clean:
 fclean: clean
 	@make -C ft_printf fclean
 	@rm -rf $(NAME)
+	@rm -rf woody
 	@echo "\033[33;1m$(NAME)\033[0;1m: $(NAME) deleted"
 
 re: fclean all

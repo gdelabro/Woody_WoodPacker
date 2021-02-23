@@ -5,13 +5,6 @@ char		*payload_end2 = "";
 uint32_t	payload_size;
 uint32_t	payload_mem_size;
 
-void	show_section(Elf64_Shdr *shdr, char *sct_names, int nb)
-{
-	ft_printf("section %lld:\n\tname %lld: %s\n\ttype: %lld\n\tflags: %.8llb\n\taddr: %.8llp\n\toffset: %.8llp\n\tsize: %llx\n\tlink: %lld\n\tinfo: %lld\n\taddralign: %lld\n\tentsize: %lld\n",
-	nb, shdr->sh_name, sct_names + shdr->sh_name, shdr->sh_type, shdr->sh_flags, shdr->sh_addr,
-	shdr->sh_offset, shdr->sh_size, shdr->sh_link, shdr->sh_info, shdr->sh_addralign, shdr->sh_entsize);
-}
-
 int		align(uint64_t nb, int alignement)
 {
 	uint64_t	res;
@@ -23,11 +16,9 @@ int		align(uint64_t nb, int alignement)
 void	modify_sections(void *ptr, Elf64_Shdr *shdr_base, int shnum, uint32_t index, elf_info *info)
 {
 	int 		i;
-	int 		i2;
 	Elf64_Shdr	*shdr;
 	char		*sct_names;
 	char		*name;
-	uint32_t	nb;
 
 	shdr = shdr_base + index;
 	check_address(shdr + 1);
@@ -42,7 +33,6 @@ void	modify_sections(void *ptr, Elf64_Shdr *shdr_base, int shnum, uint32_t index
 		check_address((void*)shdr + sizeof(*shdr));
 		name = sct_names + shdr->sh_name;
 		check_address(name);
-		//show_section(shdr, sct_names, i);
 		if (!ft_strcmp(name, ".text"))
 			info->text = shdr;
 		if (shdr->sh_offset >= info->seg->p_offset + info->seg->p_filesz && ft_strcmp(".bss", name))
@@ -71,8 +61,6 @@ void	modify_program_header(void *ptr, elf_info *info)
 	info->seg = NULL;
 	while (++i < ehdr->e_phnum)
 	{
-		//ft_printf("HEADER %d:\n\ttype: %x\n\tflags: %x\n\toffset: %x\n\tvaddr: %x\n\tpaddr: %x\n\tfilesz: %x\n\tmemsz: %x\n\talign: %x\n",
-		//i, phdr->p_type, phdr->p_flags, phdr->p_offset, phdr->p_vaddr, phdr->p_paddr, phdr->p_filesz, phdr->p_memsz, phdr->p_align);
 		if (phdr->p_type == 1)
 			filled++;
 		if (phdr->p_type == 1 && filled == 1)
@@ -100,10 +88,8 @@ void	modify_program_header(void *ptr, elf_info *info)
 void	write_binary(void *ptr, Elf64_Ehdr 	*ehdr, elf_info	*info)
 {
 	int			fd;
-	char		alignement[16] = "\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90";
 	uint64_t	size_begining;
 	void		*end_file;
-	int			i;
 	int			wrote;
 	void		*new_binary;
 
@@ -145,7 +131,7 @@ void	rebuild_binary(void *ptr)
 	if (!is_in_address(ptr + sizeof(*ehdr)))
 		ft_quit("file too small");
 	ehdr = ptr;
-	if (ft_strncmp(ehdr->e_ident, ELFMAG, 4))
+	if (ft_strncmp((const char *)ehdr->e_ident, ELFMAG, 4))
 		ft_quit("ELF signature not found");
 	if (ehdr->e_ident[EI_CLASS] != ELFCLASS64)
 		ft_quit("ELF file is not 64bits");
@@ -164,7 +150,7 @@ void	rebuild_binary(void *ptr)
 
 	info.old_entry_offset = info.new_entry - info.old_entry;
 	info.text_diff_addr = info.new_entry - info.text->sh_addr;
-	encrypt(ptr, &info);
+	encrypt_text_section(ptr, &info);
 	modify_payload(payload2, payload_size, (void*)info.old_entry_offset,
 		(void*)info.text_diff_addr, (uint64_t)info.text->sh_size, info.key);
 

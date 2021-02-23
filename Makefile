@@ -19,7 +19,7 @@ OBJ_PATH = obj
 OBJ_NAME = $(SRC_NAME:.c=.o)
 
 CC = gcc
-CFLAGS = #-Wall -Werror -Wextra
+CFLAGS = -Wall -Werror -Wextra
 
 LIB = ft_printf/libftprintf.a
 

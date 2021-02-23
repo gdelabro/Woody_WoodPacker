@@ -24,7 +24,6 @@ void	process_file(char *name)
 	int				fd;
 	char			*ptr;
 	struct stat		buf;
-	int				ret;
 
 	if ((fd = open(name, O_RDONLY)) < 0)
 		return (ft_quit("can't open the file"));
@@ -47,8 +46,6 @@ void	process_file(char *name)
 
 int		main(int ac, char **av)
 {
-	void		*file;
-
 	if (ac != 2)
 		ft_quit("only one argument needed");
 	process_file(av[1]);

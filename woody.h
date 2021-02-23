@@ -48,6 +48,6 @@ void	*get_ptr_end(void);
 void	rebuild_binary(void *ptr);
 void	modify_payload(void *pl, int sz, void *jmp_addr, void *text_diff, uint64_t size, uint64_t key);
 
-void	encrypt(void *ptr, elf_info *info);
+void	encrypt_text_section(void *ptr, elf_info *info);
 
 #endif

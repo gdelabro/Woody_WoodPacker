@@ -1,6 +1,6 @@
 #include "../woody.h"
 
-uint64_t	generate_rc4_key()
+uint64_t	generate_xor_key()
 {
 	int 		fd;
 	uint64_t	key;
@@ -14,10 +14,9 @@ uint64_t	generate_rc4_key()
 	return (key);
 }
 
-void	rc4_encrypt(uint64_t key, uint64_t *ptr, uint64_t size)
+void	xor_cipher_encrypt(uint64_t key, uint64_t *ptr, uint64_t size)
 {
-	int 		i;
-	uint64_t	tmp;
+	uint32_t	i;
 
 	i = 0;
 	while (i < size)
@@ -34,12 +33,12 @@ void	rc4_encrypt(uint64_t key, uint64_t *ptr, uint64_t size)
 	}
 }
 
-void	encrypt(void *ptr, elf_info *info)
+void	encrypt_text_section(void *ptr, elf_info *info)
 {
 	uint64_t	key;
 
-	key = generate_rc4_key();
+	key = generate_xor_key();
 	info->key = key;
 	ft_printf("key generated: [%llx]\n", key);
-	rc4_encrypt(key, ptr + info->text->sh_offset, info->text->sh_size);
+	xor_cipher_encrypt(key, ptr + info->text->sh_offset, info->text->sh_size);
 }

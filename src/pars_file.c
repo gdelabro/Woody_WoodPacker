@@ -13,6 +13,31 @@ int		align(uint64_t nb, int alignement)
 	return (res);
 }
 
+void	search_data_section(void *ptr, Elf64_Shdr *shdr_base, int shnum, uint32_t index, elf_info *info)
+{
+	int 		i;
+	Elf64_Shdr	*shdr;
+	char		*sct_names;
+	char		*name;
+
+	shdr = shdr_base + index;
+	check_address(shdr + 1);
+	check_address(shdr_base + shnum);
+	sct_names = ptr + shdr->sh_offset;
+	check_address(sct_names);
+	info->text = NULL;
+	i = -1;
+	while (++i < shnum)
+	{
+		shdr = shdr_base + i;
+		check_address((void*)shdr + sizeof(*shdr));
+		name = sct_names + shdr->sh_name;
+		check_address(name);
+		if (!ft_strcmp(name, ".data"))
+			info->data_offset = shdr->sh_offset;
+	}
+}
+
 void	modify_sections(void *ptr, Elf64_Shdr *shdr_base, int shnum, uint32_t index, elf_info *info)
 {
 	int 		i;
@@ -40,8 +65,6 @@ void	modify_sections(void *ptr, Elf64_Shdr *shdr_base, int shnum, uint32_t index
 			shdr->sh_addr ? shdr->sh_addr += info->bits_added : 0;
 			shdr->sh_offset += info->bits_added;
 		}
-		if (!ft_strcmp(".bss", name))
-			shdr->sh_type = 1;
 	}
 }
 
@@ -50,22 +73,22 @@ void	modify_program_header(void *ptr, elf_info *info)
 	Elf64_Ehdr	*ehdr;
 	Elf64_Phdr	*phdr;
 	int			i;
-	int			filled;
+	//int			filled;
 
 	ehdr = ptr;
 	phdr = ptr + ehdr->e_phoff;
 	check_address(phdr + 1);
 	check_address(phdr + ehdr->e_phnum);
 	i = -1;
-	filled = 0;
+	//filled = 0;
 	info->seg = NULL;
 	while (++i < ehdr->e_phnum)
 	{
+		//if (phdr->p_type == 1)
+		//	filled++;
 		if (phdr->p_type == 1)
-			filled++;
-		if (phdr->p_type == 1 && filled == 1)
 			phdr->p_flags = PF_R | PF_W | PF_X;
-		else if (phdr->p_type == 1 && filled == 2)
+		if (phdr->p_type == 1 && (info->data_offset >= phdr->p_offset && info->data_offset < phdr->p_offset + phdr->p_filesz))//&& filled == 2)
 		{
 			phdr->p_flags = PF_R | PF_W | PF_X;
 			info->seg = phdr;
@@ -144,6 +167,7 @@ void	rebuild_binary(void *ptr)
 	ft_memcpy(payload_to_modify, payload2, payload_size);
 	payload2 = payload_to_modify;
 
+	search_data_section(ptr, ptr + ehdr->e_shoff, ehdr->e_shnum, ehdr->e_shstrndx, &info);
 	modify_program_header(ptr, &info);
 	info.bits_added = info.bss_size + payload_mem_size;
 	modify_sections(ptr, ptr + ehdr->e_shoff, ehdr->e_shnum, ehdr->e_shstrndx, &info);

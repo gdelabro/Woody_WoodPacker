@@ -33,6 +33,7 @@ typedef struct
 	uint32_t	bits_added;
 	uint64_t	key;
 	Elf64_Shdr	*text;
+	uint64_t	data_offset;
 	Elf64_Phdr	*seg;
 }				elf_info;
 

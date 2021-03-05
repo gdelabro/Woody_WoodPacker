@@ -73,19 +73,15 @@ void	modify_program_header(void *ptr, elf_info *info)
 	Elf64_Ehdr	*ehdr;
 	Elf64_Phdr	*phdr;
 	int			i;
-	//int			filled;
 
 	ehdr = ptr;
 	phdr = ptr + ehdr->e_phoff;
 	check_address(phdr + 1);
 	check_address(phdr + ehdr->e_phnum);
 	i = -1;
-	//filled = 0;
 	info->seg = NULL;
 	while (++i < ehdr->e_phnum)
 	{
-		//if (phdr->p_type == 1)
-		//	filled++;
 		if (phdr->p_type == 1)
 			phdr->p_flags = PF_R | PF_W | PF_X;
 		if (phdr->p_type == 1 && (info->data_offset >= phdr->p_offset && info->data_offset < phdr->p_offset + phdr->p_filesz))//&& filled == 2)
@@ -135,8 +131,6 @@ void	write_binary(void *ptr, Elf64_Ehdr 	*ehdr, elf_info	*info)
 	ft_memcpy(new_binary + wrote, end_file, (size_t)(get_ptr_end() - end_file));
 	wrote += (size_t)(get_ptr_end() - end_file);
 
-	if (wrote != get_ptr_end() - get_ptr_start() + info->bits_added)
-		ft_printf("wooot\n");
 	fd = open("woody", O_WRONLY | O_CREAT | O_TRUNC, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 	if (fd < 0)
 		ft_quit("can't open new file woody");
@@ -178,7 +172,6 @@ void	rebuild_binary(void *ptr)
 	modify_payload(payload2, payload_size, (void*)info.old_entry_offset,
 		(void*)info.text_diff_addr, (uint64_t)info.text->sh_size, info.key);
 
-	ft_printf("%llx\n", info.new_entry);
 	write_binary(ptr, ehdr, &info);
 	free(payload2);
 }

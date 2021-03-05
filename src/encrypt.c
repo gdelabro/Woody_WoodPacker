@@ -25,7 +25,6 @@ void	xor_cipher_encrypt(uint64_t key, uint64_t *ptr, uint64_t size)
 		{
 			key <<= (8 - (size - i)) * 8;
 			key >>= (8 - (size - i)) * 8;
-			ft_printf("size: %d\nreste: %d\nkey: %llx\n", size, (8 - (size - i)) * 8, key);
 		}
 		*ptr ^= key;
 		ptr++;
